@@ -1,4 +1,4 @@
-- Feature Name: `multipleHC-singleQR`
+- Feature Name: `multiple-shc-qr`
 - Start Date: 2022-02-07
 - Status: Draft for comment
 
