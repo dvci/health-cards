@@ -4,20 +4,177 @@
 
 # Summary
 
-[summary]: #summary
-
-There may be circumstances where an individual receives multiple SMART Health Cards. For example, if an individual may receive Health Cards from different issuers, and so these cards will have different payloads. In this case, it would be beneficial to have functionality in place for storing multiple SMART Health Cards into a single QR code, as long as the payload is small enough.
+There may be circumstances where an individual receives multiple SMART Health Cards and wishes to present them together within a single QR code or minimal set of QR codes. For example, an individual may have one SMART Health Card from an issuer that represents a first dose in a vaccination series and a different SMART Health Card that represents the second dose in a vaccination series. 
 
 # Motivation
 
-[motivation]: #motivation
-
-Consolidating multiple SMART Health Cards into a single QR code would simplify the verification process, as the verifier will only need to scan a single QR code for verification. This feature would lessen the burden on the card holder, who will no longer need to keep track of multiple SMART Health Cards.
+Giving individuals and holders the ability to present multiple SMART Health Cards together with a minimal set of QR Codes would simplify the verification process, as a verifier will need to scan fewer QR code for verification.
 
 # Guide-level explanation
 
-[guide-level-explanation]: #guide-level-explanation
+Multiple SMART Health Card JWS may be concatenated together by a colon (`:`) and then chunked and encoded using the existing [Creating a QR Code Process](https://spec.smarthealth.cards/#creating-a-qr-code-or-a-set-of-qr-codes-from-a-health-card-jws)
 
-For this situation, it is assumed that each Health Card's JWS payload has been minified and compressed, and each Health Card contains a signature.
 
-To combine into a single QR code, the JWS strings can be concatenated together with a delimiter character. The delimiter character must be `base45` and `base64url` compatible. The colon (`:`) character is compatible with the `base45` alphabet and is a URL reservable character in the `base64url` alphabet, so it can be used as the delimiter character to distinguish the different JWS strings. After combining the signatures into a single JWS string, QR generation can proceed using the existing process, implementing chunking as needed.
+<details>
+<summary>First SMART Health Card Details<summary>
+
+Payload:
+```json
+{
+  "iss": "https://spec.smarthealth.cards/examples/issuer",
+  "nbf": 1644377267.989,
+  "vc": {
+    "type": [
+      "https://smarthealth.cards#health-card",
+      "https://smarthealth.cards#immunization",
+      "https://smarthealth.cards#covid19"
+    ],
+    "credentialSubject": {
+      "fhirVersion": "4.0.1",
+      "fhirBundle": {
+        "resourceType": "Bundle",
+        "type": "collection",
+        "entry": [
+          {
+            "fullUrl": "resource:0",
+            "resource": {
+              "resourceType": "Patient",
+              "name": [
+                {
+                  "family": "Anyperson",
+                  "given": [
+                    "John",
+                    "B."
+                  ]
+                }
+              ],
+              "birthDate": "1951-01-20"
+            }
+          },
+          {
+            "fullUrl": "resource:1",
+            "resource": {
+              "resourceType": "Immunization",
+              "status": "completed",
+              "vaccineCode": {
+                "coding": [
+                  {
+                    "system": "http://hl7.org/fhir/sid/cvx",
+                    "code": "207"
+                  }
+                ]
+              },
+              "patient": {
+                "reference": "resource:0"
+              },
+              "occurrenceDateTime": "2021-01-01",
+              "performer": [
+                {
+                  "actor": {
+                    "display": "ABC General Hospital"
+                  }
+                }
+              ],
+              "lotNumber": "0000001"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+JWS:
+```
+eyJ6aXAiOiJERUYiLCJhbGciOiJFUzI1NiIsImtpZCI6IjNLZmRnLVh3UC03Z1h5eXd0VWZVQUR3QnVtRE9QS01ReC1pRUxMMTFXOXMifQ.fZJJb9swEIX_SjC9ylocJ6p1i1OgaQ9Bgaa9FD7Q1NhiwUXgIsQN9N87QzvogiS6jfj48b1HPoEKAToYYhxDV1VhRFkGI3wcUOg4lFL4PlT4KMyoMVSkTuihALvbQ9dcr1aXbbu8bsv1-3UBk4TuCeJxROh-_GH-j3t3GhY8EOp1nTImWfVLROXsm0LpJtU3a9gWID32aKMS-mva_UQZ2dJ-UP47-sCcDlZlXTbE47-bZHuNrPEYXPISH7J9OC8U5zggndZEOzmhA_yRMhI5af3NaxI87-9qEjwPL4C_UBzazx0KgyeIMEoTD24saXzIZxzUhJZ7_OwGnjclbGcKuFMU_oOIzGrWV82ibhbLGua5eNFN87abT_9WHKKIKeS4fOER-YImIaWyeOv6TJCuV_aQjYdjiGjO74duZtBt6fyh4maroPpKTo8EkHknLOsW5u1cwHiuINvZo0fL3v5ukEROyuTzEod9UOaEWObANceiqvbOG3qP7EXI6DwjexVGLXKdm9uLj2jRC31x58KootBUFJWoXbxPZsdboc5fwwszfb8B.2Y0USABv_tXYibzLjNDcFgxke_ILJWXGu4IFh8Jy-O9nQLdijDm6XMpy2nRUE13L2Amel9nVGkQkvYn3I9SoIQ
+```
+
+Numeric Encoded:
+```
+shc:/56762909524320603460292437404460312229595326546034602925407728043360287028647167452228092861333145643765314159064022030645045908564355034142454136403706366541713724123638030437562204673740753232392543344332605736015745292953127074242843503861221276636654290967046004345852361221585252122523103604335960744043582870363312331110367773665860380961576107115304273566243020396644445975234104415937256226280674544034580763253107356339073032766632413862397260592031735336125554690452435353721153707304000640216207397222562975373459005026270061067106265944112434670465392864425741313734437064033167297140065212584228230605523032380064735250403645055529004035071000702254236345634339532407100053452772336935244443352838271029123422114008775858655545243477645920507637325928085257063352752811100012682461743531072250402177527775033058765628322466392305077052437728457577405929451050347426656154635326543072253240506634287726694241110560535953312672520856332533111052533950124227303028305638075734243700442864285242765634730939292272415052366144556160266134100755724571217109577659076452696635673039661124622762653134704208720454742760722833734566035731067308726224373476723977246655124034522442345320335456606873533426066835102443280923746156754126314330556412723161056137220604750811306666712140252942664353753545705553665408577474707757531121010544034038202173507143446053773161332354255875625650283129424326720728255911297600341265363155606123640943326776056537402404063105206456631265412662366273446506281238662836
+```
+
+</details>
+
+<details>
+<summary>Second SMART Health Card Details<summary>
+
+Payload:
+```json
+{
+  "iss": "https://spec.smarthealth.cards/examples/issuer",
+  "nbf": 1644377928.942,
+  "vc": {
+    "type": [
+      "https://smarthealth.cards#health-card",
+      "https://smarthealth.cards#immunization",
+      "https://smarthealth.cards#covid19"
+    ],
+    "credentialSubject": {
+      "fhirVersion": "4.0.1",
+      "fhirBundle": {
+        "resourceType": "Bundle",
+        "type": "collection",
+        "entry": [
+          {
+            "fullUrl": "resource:0",
+            "resource": {
+              "resourceType": "Patient",
+              "name": [
+                {
+                  "family": "Anyperson",
+                  "given": [
+                    "John",
+                    "B."
+                  ]
+                }
+              ],
+              "birthDate": "1951-01-20"
+            }
+          },
+          {
+            "fullUrl": "resource:1",
+            "resource": {
+              "resourceType": "Immunization",
+              "status": "completed",
+              "vaccineCode": {
+                "coding": [
+                  {
+                    "system": "http://hl7.org/fhir/sid/cvx",
+                    "code": "207"
+                  }
+                ]
+              },
+              "patient": {
+                "reference": "resource:0"
+              },
+              "occurrenceDateTime": "2021-01-29",
+              "performer": [
+                {
+                  "actor": {
+                    "display": "ABC General Hospital"
+                  }
+                }
+              ],
+              "lotNumber": "0000007"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+JWS:
+```
+eyJ6aXAiOiJERUYiLCJhbGciOiJFUzI1NiIsImtpZCI6IjNLZmRnLVh3UC03Z1h5eXd0VWZVQUR3QnVtRE9QS01ReC1pRUxMMTFXOXMifQ.fZJLb9QwFIX_SnXZZvJiICQ7pkg8FgiJ0g2ahce5MzHyI7KdqEOV_869zlRA1Ta7Gx9_PufY96BCgA6GGMfQFUUYUebBCB8HFDoOuRS-DwXeCTNqDAWpJ_SQgT0coavebrevm6at3-Xtts5gltDdQzyPCN3Pv8zHuFfrsOGBUM_rlDGTVb9FVM6-KJRuVn3Vwj4D6bFHG5XQ36fDL5SRLR0H5W_RB-Z0sM3LvCIe_91NttfIGo_BTV7iTbIPl4XsEgek05poqxM6wJ8pI5EnrX94TYKH_V1JgofhCfA3ikP7uUNhcIUIozTx4L0ljQ_pjJOa0XKPX9zA8y6H_UIBD4rCfxCRWVX7ptqU1aYuYVmyJ91UL7v5_H_FIYo4hRSXLzwiX9AspFQWr12fCNL1yp6S8XAOEc3l_dDNDLrJnT8V3GwRVF_I-Y4AMu2Eumxg2S8ZjJcKkp0jerTs7d8GSeSknHxa4rA3yqyIeg3cEpaqOjpv6D2yFyGj84zsVRi1SHXurq8-okUv9NUnF0YVhaaiqETt4tfJHHgrlOlreGGh7w8.8FAJVjM89FexIzbe75XsaFzroB5NCMXv5X7jkzOPw4XTDeoMHVOqQmAroWMJojH0TMdXegXSP1hpO-K6tCXK-g
+```
+
+Numeric Encoded:
+```
+shc:/567629095243206034602924374044603122295953265460346029254077280433602870286471674522280928613331456437653141590640220306450459085643550341424541364037063665417137241236380304375622046737407532323925433443326057360157452931531236742528435038654345457329602822361067625811255860290358055259545608327727762810305568243441501109127763372004395210267512503572574412092122582009262632573625404044405653212221112725236634723738002374435622393368232042672950383658390354665273565369567364095271060043717170085863712355367776352233063573117727722557697034262140325069632326394153122541320900302937724165064174610723095325272608433606095723310838373137032708425037210045037032063173222856501204337171572826665021394110603953283563074370245856620308676668753209742911672808246569431207394430275041042958665759225720066062351072403359542840286677397507310363613650676129345203433035431277201176092750402821230769225775223742414310677168400452447244416476291204403110730850275025284466075937384331777460431220706725364269040557223331047667093811432034245406635055233323316929653911410626743741255028004407203272052472647558053811456129543062670361566939701055112638563862652775520769200676687628565806542467526834616773092305762576266111077770413760043827437269681100666240731233406525034441595252606824397107715729272758696334636956262659107411011125202941613211122556752877535610084370522577696621083322324373084310616277343574074339235666322741346836642069664232296661270339325543565843383504596734003009712243300058
+```
+
+</details>
