@@ -16,7 +16,7 @@ Multiple SMART Health Card JWS may be concatenated together by a colon (`:`) and
 
 
 <details>
-<summary>First SMART Health Card Details<summary>
+<summary>First SMART Health Card Details</summary>
 
 Payload:
 ```json
@@ -98,7 +98,7 @@ shc:/567629095243206034602924374044603122295953265460346029254077280433602870286
 </details>
 
 <details>
-<summary>Second SMART Health Card Details<summary>
+<summary>Second SMART Health Card Details</summary>
 
 Payload:
 ```json
